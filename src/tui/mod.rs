@@ -1,4 +1,5 @@
 mod app_model;
-mod view;
-mod update;
+mod app_page;
 pub(crate) mod tui;
+mod update;
+mod view;
