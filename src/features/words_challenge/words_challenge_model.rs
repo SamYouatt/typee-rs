@@ -19,12 +19,17 @@ impl WordsChallengeModel {
     pub fn handle_input(self, keycode: KeyCode) -> Self {
         match keycode {
             KeyCode::Char(char) => self.handle_character(char),
+            KeyCode::Backspace => self.handle_backspace(),
             _ => self,
         }
     }
 
     fn handle_character(self, char: char) -> Self {
         Self { current_pos: self.current_pos + 1, ..self }
+    }
+
+    fn handle_backspace(self) -> Self {
+        Self { current_pos: self.current_pos.saturating_sub(1), ..self }
     }
 }
 
