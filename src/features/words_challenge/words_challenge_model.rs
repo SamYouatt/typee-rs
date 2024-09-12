@@ -2,16 +2,20 @@ use crossterm::event::KeyCode;
 
 pub struct WordsChallengeModel {
     text: String,
+    text_length: usize,
+    // the cursor location in the test
     current_pos: usize,
     finished: bool,
 }
 
 impl WordsChallengeModel {
-    pub fn generate(length: usize) -> Self {
-        let text = "bongle ".repeat(length);
+    pub fn generate(num_words: usize) -> Self {
+        let text = "bongle ".repeat(num_words);
+        let text_length = text.chars().count();
 
         Self {
             text,
+            text_length,
             current_pos: 0,
             finished: false,
         }
@@ -25,7 +29,36 @@ impl WordsChallengeModel {
         }
     }
 
-    fn handle_character(self, char: char) -> Self {
+    fn handle_character(self, input_char: char) -> Self {
+        if self.finished {
+            panic!("challenge should not be handling input after finishing");
+        }
+
+        // final letter
+        if self.current_pos == self.text_length - 1 {
+            let expected_char = self.text.chars().nth(self.current_pos).unwrap();
+            let finished = input_char == expected_char;
+            return Self {
+                current_pos: self.current_pos + 1,
+                finished,
+                ..self
+            };
+        }
+
+        // the final letter was previously incorrect
+        if self.current_pos == self.text_length {
+            // pressing space should end challenge
+            if input_char == ' ' {
+                return Self {
+                    finished: true,
+                    ..self
+                };
+            }
+
+            // further incorrect characters should pile up but not progress
+            return self;
+        }
+
         Self {
             current_pos: self.current_pos + 1,
             ..self
@@ -45,16 +78,22 @@ mod tests {
     use super::*;
 
     fn model_with_text(text: impl ToString) -> WordsChallengeModel {
+        let text = text.to_string();
+        let text_length = text.chars().count();
         WordsChallengeModel {
-            text: text.to_string(),
+            text,
+            text_length,
             current_pos: 0,
             finished: false,
         }
     }
 
     fn model_with_test_and_pos(text: impl ToString, pos: usize) -> WordsChallengeModel {
+        let text = text.to_string();
+        let text_length = text.chars().count();
         WordsChallengeModel {
-            text: text.to_string(),
+            text,
+            text_length,
             current_pos: pos,
             finished: false,
         }
@@ -150,13 +189,12 @@ mod tests {
     }
 
     #[test]
-    fn further_characters_after_finished_does_nothing() {
+    #[should_panic]
+    fn further_characters_after_finished_panics() {
         let model = model_with_text("ab");
-        let result = model
+        let _ = model
             .handle_input(KeyCode::Char('a'))
             .handle_input(KeyCode::Char('b'))
             .handle_input(KeyCode::Char('c'));
-        assert_eq!(result.current_pos, 1);
-        assert_eq!(result.finished, true);
     }
 }
