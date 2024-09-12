@@ -47,14 +47,14 @@ mod tests {
     }
 
     #[test]
-    fn correct_input_advances_challenge() {
+    fn correct_character_advances_challenge() {
         let model = model_with_text("test");
         let result = model.handle_input(KeyCode::Char('t'));
         assert_eq!(result.current_pos, 1);
     }
 
     #[test]
-    fn incorrect_input_advances_challenge() {
+    fn incorrect_character_advances_challenge() {
         let model = model_with_text("test");
         let result = model.handle_input(KeyCode::Char('x'));
         assert_eq!(result.current_pos, 1);
@@ -72,5 +72,19 @@ mod tests {
         let model = model_with_test_and_pos("space test", 2);
         let result = model.handle_input(KeyCode::Char(' '));
         assert_eq!(result.current_pos, 3);
+    }
+    
+    #[test]
+    fn backspace_at_start_does_nothing() {
+        let model = model_with_text("test");
+        let result = model.handle_input(KeyCode::Backspace);
+        assert_eq!(result.current_pos, 0);
+    }
+
+    #[test]
+    fn backspace_moves_backwards() {
+        let model = model_with_test_and_pos("test", 2);
+        let result = model.handle_input(KeyCode::Backspace);
+        assert_eq!(result.current_pos, 1);
     }
 }
