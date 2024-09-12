@@ -18,9 +18,13 @@ impl WordsChallengeModel {
 
     pub fn handle_input(self, keycode: KeyCode) -> Self {
         match keycode {
-            KeyCode::Char(char) => todo!(),
-            _ => self
+            KeyCode::Char(char) => self.handle_character(char),
+            _ => self,
         }
+    }
+
+    fn handle_character(self, char: char) -> Self {
+        Self { current_pos: self.current_pos + 1, ..self }
     }
 }
 
