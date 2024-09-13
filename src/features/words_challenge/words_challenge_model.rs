@@ -74,6 +74,10 @@ impl WordsChallengeModel {
 
     // requests the challenge to poll the current wpm and store it
     pub fn poll_wpm(mut self) -> Self {
+        if self.end_time.is_some() {
+            panic!("should not be asked to poll wpm on a finished test");
+        }
+
         if self.start_time.is_none() {
             self.running_wpm.push(0.0);
             return self;
