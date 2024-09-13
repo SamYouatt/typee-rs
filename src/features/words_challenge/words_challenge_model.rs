@@ -88,7 +88,7 @@ mod tests {
         }
     }
 
-    fn model_with_test_and_pos(text: impl ToString, pos: usize) -> WordsChallengeModel {
+    fn model_with_text_and_pos(text: impl ToString, pos: usize) -> WordsChallengeModel {
         let text = text.to_string();
         let text_length = text.chars().count();
         WordsChallengeModel {
@@ -115,14 +115,14 @@ mod tests {
 
     #[test]
     fn correct_space_advances_challenge() {
-        let model = model_with_test_and_pos("space test", 5);
+        let model = model_with_text_and_pos("space test", 5);
         let result = model.handle_input(KeyCode::Char(' '));
         assert_eq!(result.current_pos, 6);
     }
 
     #[test]
     fn incorrect_slace_advances_challenge() {
-        let model = model_with_test_and_pos("space test", 2);
+        let model = model_with_text_and_pos("space test", 2);
         let result = model.handle_input(KeyCode::Char(' '));
         assert_eq!(result.current_pos, 3);
     }
@@ -136,21 +136,21 @@ mod tests {
 
     #[test]
     fn backspace_moves_backwards() {
-        let model = model_with_test_and_pos("test", 2);
+        let model = model_with_text_and_pos("test", 2);
         let result = model.handle_input(KeyCode::Backspace);
         assert_eq!(result.current_pos, 1);
     }
 
     #[test]
     fn correct_final_character_finished_challenge() {
-        let model = model_with_test_and_pos("test", 3);
+        let model = model_with_text_and_pos("test", 3);
         let result = model.handle_input(KeyCode::Char('t'));
         assert_eq!(result.finished, true);
     }
 
     #[test]
     fn incorrect_final_character_does_not_finish_challenge() {
-        let model = model_with_test_and_pos("test", 3);
+        let model = model_with_text_and_pos("test", 3);
         let result = model.handle_input(KeyCode::Char('x'));
         assert_eq!(result.current_pos, 4);
         assert_eq!(result.finished, false);
@@ -158,7 +158,7 @@ mod tests {
 
     #[test]
     fn further_incorrect_characters_are_not_registered() {
-        let model = model_with_test_and_pos("test", 3);
+        let model = model_with_text_and_pos("test", 3);
         let result = model
             .handle_input(KeyCode::Char('x'))
             .handle_input(KeyCode::Char('x'))
@@ -170,7 +170,7 @@ mod tests {
 
     #[test]
     fn space_after_incorrect_final_character_finishes_challenge() {
-        let model = model_with_test_and_pos("test", 3);
+        let model = model_with_text_and_pos("test", 3);
         let result = model
             .handle_input(KeyCode::Char('x'))
             .handle_input(KeyCode::Char(' '));
@@ -181,7 +181,7 @@ mod tests {
 
     #[test]
     fn space_as_final_incorrect_letter_does_not_finished_challenge() {
-        let model = model_with_test_and_pos("test", 3);
+        let model = model_with_text_and_pos("test", 3);
         let result = model.handle_input(KeyCode::Char(' '));
 
         assert_eq!(result.current_pos, 4);
@@ -200,7 +200,7 @@ mod tests {
 
     #[test]
     fn backspace_with_incorrect_final_character_moves_backwards() {
-        let model = model_with_test_and_pos("test", 3);
+        let model = model_with_text_and_pos("test", 3);
         let result = model.handle_input(KeyCode::Char('x'));
         assert_eq!(result.current_pos, 4);
 
