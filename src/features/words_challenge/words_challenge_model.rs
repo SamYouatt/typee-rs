@@ -73,8 +73,30 @@ impl WordsChallengeModel {
     }
 
     // requests the challenge to poll the current wpm and store it
-    pub fn poll_wpm(self) -> Self {
-        todo!()
+    pub fn poll_wpm(mut self) -> Self {
+        if self.start_time.is_none() {
+            self.running_wpm.push(0.0);
+            return self;
+        }
+
+        let completed_substring = &self.text[..=self.current_pos];
+        let completed_words = completed_substring.chars().filter(|c| c == &' ').count();
+
+        if completed_words == 0 {
+            self.running_wpm.push(0.0);
+            return self;
+        }
+
+        let current_elapsed_mins = Instant::now()
+            .duration_since(self.start_time.unwrap())
+            .as_secs_f32()
+            / 60.0;
+
+        let wpm = completed_words as f32 / current_elapsed_mins;
+        let rounded_wpm = (wpm * 10.0).round() / 10.0;
+
+        self.running_wpm.push(rounded_wpm);
+        self
     }
 
     // The percentage accuracy of the test, rounded to 1 decimal place
