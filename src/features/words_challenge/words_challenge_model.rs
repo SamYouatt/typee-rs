@@ -5,6 +5,7 @@ use crossterm::event::KeyCode;
 pub struct WordsChallengeModel {
     text: String,
     text_length: usize,
+    text_word_count: usize,
     // the cursor location in the test
     current_pos: usize,
     finished: bool,
@@ -17,10 +18,12 @@ impl WordsChallengeModel {
     pub fn generate(num_words: usize) -> Self {
         let text = "bongle ".repeat(num_words);
         let text_length = text.chars().count();
+        let text_word_count = text.split_whitespace().count();
 
         Self {
             text,
             text_length,
+            text_word_count,
             current_pos: 0,
             finished: false,
             incorrect_indices: HashSet::new(),
@@ -35,6 +38,32 @@ impl WordsChallengeModel {
             KeyCode::Backspace => self.handle_backspace(),
             _ => self,
         }
+    }
+
+    // calculates the wpm of a finished test, will panic for unfinished or unstarted test
+    pub fn wpm(self) -> f32 {
+        if self.start_time.is_none() {
+            panic!("cannot calculate wpm for unstarted challenge");
+        }
+        if self.end_time.is_none() {
+            panic!("cannot calculate wpm for unfinished challenge");
+        }
+
+        let challenge_time_mins = self
+            .end_time
+            .unwrap()
+            .duration_since(self.start_time.unwrap())
+            .as_secs_f32()
+            / 60.0;
+
+        if challenge_time_mins <= 0.0 {
+            panic!("shouldn't have test duration with no or negative time");
+        }
+
+        let wpm = self.text_word_count as f32 / challenge_time_mins;
+        let rounded_wpm = (wpm * 10.0).round() / 10.0;
+
+        rounded_wpm
     }
 
     // The percentage accuracy of the test, rounded to 1 decimal place
@@ -106,9 +135,11 @@ mod tests {
     fn model_with_text(text: impl ToString) -> WordsChallengeModel {
         let text = text.to_string();
         let text_length = text.chars().count();
+        let text_word_count = text.split_whitespace().count();
         WordsChallengeModel {
             text,
             text_length,
+            text_word_count,
             current_pos: 0,
             finished: false,
             incorrect_indices: HashSet::new(),
@@ -120,9 +151,11 @@ mod tests {
     fn model_with_text_and_pos(text: impl ToString, pos: usize) -> WordsChallengeModel {
         let text = text.to_string();
         let text_length = text.chars().count();
+        let text_word_count = text.split_whitespace().count();
         WordsChallengeModel {
             text,
             text_length,
+            text_word_count,
             current_pos: pos,
             finished: false,
             incorrect_indices: HashSet::new(),
@@ -334,7 +367,8 @@ mod tests {
 
         let model = WordsChallengeModel {
             text: "three words long".to_string(),
-            text_length: 3,
+            text_length: 16,
+            text_word_count: 3,
             current_pos: 15,
             finished: true,
             incorrect_indices: HashSet::new(),
