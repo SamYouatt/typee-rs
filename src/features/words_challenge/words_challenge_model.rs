@@ -29,6 +29,10 @@ impl WordsChallengeModel {
         }
     }
 
+    pub fn accuracy_percent(&self) -> f32 {
+        todo!()
+    }
+
     fn handle_character(self, input_char: char) -> Self {
         if self.finished {
             panic!("challenge should not be handling input after finishing");
@@ -206,5 +210,71 @@ mod tests {
 
         let result = result.handle_input(KeyCode::Backspace);
         assert_eq!(result.current_pos, 3);
+    }
+
+    #[test]
+    fn fully_correct_gives_100_percent_accuracy() {
+        let model = model_with_text("dog");
+
+        let result = model
+            .handle_input(KeyCode::Char('d'))
+            .handle_input(KeyCode::Char('o'))
+            .handle_input(KeyCode::Char('g'));
+
+        assert_eq!(result.accuracy_percent(), 100.0);
+    }
+
+    #[test]
+    fn fully_correct_with_retypes_gives_100_percent_accuracy() {
+        let model = model_with_text("dog");
+
+        let result = model
+            .handle_input(KeyCode::Char('d'))
+            .handle_input(KeyCode::Char('o'))
+            .handle_input(KeyCode::Backspace)
+            .handle_input(KeyCode::Char('o'))
+            .handle_input(KeyCode::Char('g'));
+
+        assert_eq!(result.accuracy_percent(), 100.0);
+    }
+
+    #[test]
+    fn fully_incorrect_gives_0_percent_accuracy() {
+        let model = model_with_text("dog");
+
+        let result = model
+            .handle_input(KeyCode::Char('c'))
+            .handle_input(KeyCode::Char('a'))
+            .handle_input(KeyCode::Char('t'))
+            .handle_input(KeyCode::Char(' '));
+
+        assert_eq!(result.accuracy_percent(), 0.0);
+    }
+
+    #[test]
+    fn fully_incorrect_with_retypes_gives_0_percent_accuracy() {
+        let model = model_with_text("an");
+
+        let result = model
+            .handle_input(KeyCode::Char('b'))
+            .handle_input(KeyCode::Backspace)
+            .handle_input(KeyCode::Char('a'))
+            .handle_input(KeyCode::Char('x'))
+            .handle_input(KeyCode::Backspace)
+            .handle_input(KeyCode::Char('n'));
+
+        assert_eq!(result.accuracy_percent(), 0.0);
+    }
+
+    #[test]
+    fn some_incorrect_gives_correct_percentage() {
+        let model = model_with_text("dog");
+
+        let result = model
+            .handle_input(KeyCode::Char('d'))
+            .handle_input(KeyCode::Char('a'))
+            .handle_input(KeyCode::Char('g'));
+
+        assert_eq!(result.accuracy_percent(), 33.3);
     }
 }
