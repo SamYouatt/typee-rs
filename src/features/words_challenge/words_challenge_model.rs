@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, time::Instant};
 
 use crossterm::event::KeyCode;
 
@@ -9,6 +9,8 @@ pub struct WordsChallengeModel {
     current_pos: usize,
     finished: bool,
     incorrect_indices: HashSet<usize>,
+    start_time: Option<Instant>,
+    end_time: Option<Instant>,
 }
 
 impl WordsChallengeModel {
@@ -22,6 +24,8 @@ impl WordsChallengeModel {
             current_pos: 0,
             finished: false,
             incorrect_indices: HashSet::new(),
+            start_time: None,
+            end_time: None,
         }
     }
 
@@ -44,7 +48,7 @@ impl WordsChallengeModel {
         let as_percent = accuracy * 100.0;
         let rounded = (as_percent * 10.0).round() / 10.0;
 
-        rounded
+        return rounded;
     }
 
     fn handle_character(self, input_char: char) -> Self {
@@ -95,6 +99,8 @@ impl WordsChallengeModel {
 
 #[cfg(test)]
 mod tests {
+    use std::time::{Duration, Instant};
+
     use super::*;
 
     fn model_with_text(text: impl ToString) -> WordsChallengeModel {
@@ -106,6 +112,8 @@ mod tests {
             current_pos: 0,
             finished: false,
             incorrect_indices: HashSet::new(),
+            start_time: None,
+            end_time: None,
         }
     }
 
@@ -118,6 +126,8 @@ mod tests {
             current_pos: pos,
             finished: false,
             incorrect_indices: HashSet::new(),
+            start_time: None,
+            end_time: None,
         }
     }
 
@@ -294,5 +304,45 @@ mod tests {
             .handle_input(KeyCode::Char('g'));
 
         assert_eq!(result.accuracy_percent(), 66.7);
+    }
+
+    #[test]
+    fn challenge_should_only_start_on_first_input() {
+        let model = WordsChallengeModel::generate(3);
+        assert_eq!(model.start_time, None);
+
+        let result = model.handle_input(KeyCode::Char('a'));
+        assert!(result.start_time.is_some());
+    }
+
+    #[test]
+    fn challenge_end_time_should_populate_at_completion() {
+        let model = model_with_text("an");
+        assert_eq!(model.end_time, None);
+
+        let result = model.handle_input(KeyCode::Char('a'));
+        assert_eq!(result.end_time, None);
+
+        let result = result.handle_input(KeyCode::Char('n'));
+        assert!(result.start_time.is_some());
+    }
+
+    #[test]
+    fn challenge_wpm_is_correct() {
+        let start_time = Instant::now();
+        let end_time = start_time + Duration::from_secs(3);
+
+        let model = WordsChallengeModel {
+            text: "three words long".to_string(),
+            text_length: 3,
+            current_pos: 15,
+            finished: true,
+            incorrect_indices: HashSet::new(),
+            start_time: Some(start_time),
+            end_time: Some(end_time),
+        };
+
+        let wpm = model.wpm();
+        assert_eq!(wpm, 60.0);
     }
 }
