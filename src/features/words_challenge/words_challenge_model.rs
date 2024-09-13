@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use crossterm::event::KeyCode;
 
 pub struct WordsChallengeModel {
@@ -6,6 +8,7 @@ pub struct WordsChallengeModel {
     // the cursor location in the test
     current_pos: usize,
     finished: bool,
+    incorrect_indices: HashSet<usize>,
 }
 
 impl WordsChallengeModel {
@@ -18,6 +21,7 @@ impl WordsChallengeModel {
             text_length,
             current_pos: 0,
             finished: false,
+            incorrect_indices: HashSet::new(),
         }
     }
 
@@ -38,18 +42,8 @@ impl WordsChallengeModel {
             panic!("challenge should not be handling input after finishing");
         }
 
-        // final letter
-        if self.current_pos == self.text_length - 1 {
-            let expected_char = self.text.chars().nth(self.current_pos).unwrap();
-            let finished = input_char == expected_char;
-            return Self {
-                current_pos: self.current_pos + 1,
-                finished,
-                ..self
-            };
-        }
-
-        // the final letter was previously incorrect
+        // the final letter was previously incorrect, it must be corrected or skipped
+        // it will never be counted as correct
         if self.current_pos == self.text_length {
             // pressing space should end challenge
             if input_char == ' ' {
@@ -59,12 +53,24 @@ impl WordsChallengeModel {
                 };
             }
 
-            // further incorrect characters should pile up but not progress
+            // further incorrect characters should do nothing
             return self;
         }
 
+        let expected_char = self.text.chars().nth(self.current_pos).unwrap();
+        let is_correct = input_char == expected_char;
+
+        let mut incorrect_indices = self.incorrect_indices;
+        if !is_correct {
+            incorrect_indices.insert(self.current_pos);
+        }
+
+        let is_finished = self.current_pos == self.text_length - 1 && is_correct;
+
         Self {
             current_pos: self.current_pos + 1,
+            finished: is_finished,
+            incorrect_indices,
             ..self
         }
     }
@@ -89,6 +95,7 @@ mod tests {
             text_length,
             current_pos: 0,
             finished: false,
+            incorrect_indices: HashSet::new(),
         }
     }
 
@@ -100,6 +107,7 @@ mod tests {
             text_length,
             current_pos: pos,
             finished: false,
+            incorrect_indices: HashSet::new(),
         }
     }
 
