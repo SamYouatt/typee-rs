@@ -32,7 +32,11 @@ impl WordsChallengeModel {
         }
     }
 
-    pub fn handle_input(self, keycode: KeyCode) -> Self {
+    pub fn handle_input(mut self, keycode: KeyCode) -> Self {
+        if self.start_time.is_none() {
+            self.start_time = Some(Instant::now());
+        }
+
         match keycode {
             KeyCode::Char(char) => self.handle_character(char),
             KeyCode::Backspace => self.handle_backspace(),
@@ -92,6 +96,7 @@ impl WordsChallengeModel {
             if input_char == ' ' {
                 return Self {
                     finished: true,
+                    end_time: Some(Instant::now()),
                     ..self
                 };
             }
@@ -109,11 +114,17 @@ impl WordsChallengeModel {
         }
 
         let is_finished = self.current_pos == self.text_length - 1 && is_correct;
+        let end_time_if_finished = if is_finished {
+            Some(Instant::now())
+        } else {
+            None
+        };
 
         Self {
             current_pos: self.current_pos + 1,
             finished: is_finished,
             incorrect_indices,
+            end_time: end_time_if_finished,
             ..self
         }
     }
