@@ -112,9 +112,9 @@ impl WordsChallengeModel {
         let correct_letters = (self.text_length - self.incorrect_indices.len()) as f32;
         let accuracy = correct_letters / (self.text_length as f32);
         let as_percent = accuracy * 100.0;
-        let rounded = (as_percent * 10.0).round() / 10.0;
+        let rounded_accuracy = (as_percent * 10.0).round() / 10.0;
 
-        return rounded;
+        rounded_accuracy
     }
 
     fn handle_character(self, input_char: char) -> Self {
