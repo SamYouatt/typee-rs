@@ -12,6 +12,7 @@ pub struct WordsChallengeModel {
     incorrect_indices: HashSet<usize>,
     start_time: Option<Instant>,
     end_time: Option<Instant>,
+    running_wpm: Vec<f32>,
 }
 
 impl WordsChallengeModel {
@@ -29,6 +30,7 @@ impl WordsChallengeModel {
             incorrect_indices: HashSet::new(),
             start_time: None,
             end_time: None,
+            running_wpm: Vec::new(),
         }
     }
 
@@ -68,6 +70,11 @@ impl WordsChallengeModel {
         let rounded_wpm = (wpm * 10.0).round() / 10.0;
 
         rounded_wpm
+    }
+
+    // requests the challenge to poll the current wpm and store it
+    pub fn poll_wpm(self) -> Self {
+        todo!()
     }
 
     // The percentage accuracy of the test, rounded to 1 decimal place
@@ -156,6 +163,7 @@ mod tests {
             incorrect_indices: HashSet::new(),
             start_time: None,
             end_time: None,
+            running_wpm: Vec::new(),
         }
     }
 
@@ -172,6 +180,7 @@ mod tests {
             incorrect_indices: HashSet::new(),
             start_time: None,
             end_time: None,
+            running_wpm: Vec::new(),
         }
     }
 
@@ -385,9 +394,30 @@ mod tests {
             incorrect_indices: HashSet::new(),
             start_time: Some(start_time),
             end_time: Some(end_time),
+            running_wpm: Vec::new(),
         };
 
         let wpm = model.wpm();
         assert_eq!(wpm, 60.0);
+    }
+
+    #[test]
+    fn poll_wpm_should_calculate_wpm_and_store() {
+        let now = Instant::now();
+        let start_time = now - Duration::from_secs(2);
+        let model = WordsChallengeModel {
+            text: "five words long this text".to_string(),
+            text_length: 25,
+            text_word_count: 5,
+            current_pos: 15,
+            finished: true,
+            incorrect_indices: HashSet::new(),
+            start_time: Some(start_time),
+            end_time: None,
+            running_wpm: Vec::new(),
+        };
+
+        let result = model.poll_wpm();
+        assert_eq!(result.running_wpm[0], 90.0);
     }
 }
