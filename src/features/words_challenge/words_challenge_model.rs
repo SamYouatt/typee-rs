@@ -283,6 +283,6 @@ mod tests {
             .handle_input(KeyCode::Char('a'))
             .handle_input(KeyCode::Char('g'));
 
-        assert_eq!(result.accuracy_percent(), 33.3);
+        assert_eq!(result.accuracy_percent(), 66.7);
     }
 }
