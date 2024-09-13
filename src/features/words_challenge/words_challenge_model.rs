@@ -33,8 +33,18 @@ impl WordsChallengeModel {
         }
     }
 
+    // The percentage accuracy of the test, rounded to 1 decimal place
     pub fn accuracy_percent(&self) -> f32 {
-        todo!()
+        if self.incorrect_indices.is_empty() {
+            return 100.0;
+        }
+
+        let correct_letters = (self.text_length - self.incorrect_indices.len()) as f32;
+        let accuracy = correct_letters / (self.text_length as f32);
+        let as_percent = accuracy * 100.0;
+        let rounded = (as_percent * 10.0).round() / 10.0;
+
+        rounded
     }
 
     fn handle_character(self, input_char: char) -> Self {
