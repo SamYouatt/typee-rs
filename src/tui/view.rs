@@ -1,6 +1,6 @@
-use ratatui::Frame;
 use ratatui::prelude::*;
 use ratatui::widgets::Paragraph;
+use ratatui::Frame;
 
 use super::app_model::AppModel;
 
