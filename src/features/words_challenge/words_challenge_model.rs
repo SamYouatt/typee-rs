@@ -197,4 +197,14 @@ mod tests {
             .handle_input(KeyCode::Char('b'))
             .handle_input(KeyCode::Char('c'));
     }
+
+    #[test]
+    fn backspace_with_incorrect_final_character_moves_backwards() {
+        let model = model_with_test_and_pos("test", 3);
+        let result = model.handle_input(KeyCode::Char('x'));
+        assert_eq!(result.current_pos, 4);
+
+        let result = result.handle_input(KeyCode::Backspace);
+        assert_eq!(result.current_pos, 3);
+    }
 }
