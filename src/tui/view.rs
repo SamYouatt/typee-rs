@@ -1,11 +1,12 @@
-use ratatui::prelude::*;
-use ratatui::widgets::Paragraph;
 use ratatui::Frame;
 
+use crate::features::words_challenge::words_challenge_view::words_challenge_view;
+
 use super::app_model::AppModel;
+use super::app_page::AppPage;
 
-pub fn view(_model: &AppModel, frame: &mut Frame) {
-    let typee = Paragraph::new("Typee");
-
-    frame.render_widget(typee, frame.area());
+pub fn view(model: &AppModel, frame: &mut Frame) {
+    match &model.app_state {
+        AppPage::WordsChallenge(challenge) => words_challenge_view(challenge, frame),
+    }
 }
