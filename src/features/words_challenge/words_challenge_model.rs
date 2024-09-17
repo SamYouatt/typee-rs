@@ -3,13 +3,13 @@ use std::{collections::HashSet, time::Instant};
 use crossterm::event::KeyCode;
 
 pub struct WordsChallengeModel {
-    text: String,
+    pub(super) text: String,
     text_length: usize,
     text_word_count: usize,
     // the cursor location in the test
-    current_pos: usize,
+    pub(super) current_pos: usize,
     finished: bool,
-    incorrect_indices: HashSet<usize>,
+    pub(super) incorrect_indices: HashSet<usize>,
     start_time: Option<Instant>,
     end_time: Option<Instant>,
     running_wpm: Vec<f32>,
