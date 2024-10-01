@@ -4,7 +4,7 @@ use crossterm::event::KeyCode;
 
 pub struct WordsChallengeModel {
     pub(super) text: String,
-    text_length: usize,
+    pub(super) text_length: usize,
     text_word_count: usize,
     // the cursor location in the test
     pub(super) current_pos: usize,
