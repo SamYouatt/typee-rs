@@ -1,5 +1,5 @@
 use color_eyre::Result;
-use crossterm::event::{self, KeyCode, KeyEventKind};
+use crossterm::event::{self, KeyCode, KeyEventKind, KeyModifiers};
 
 use crate::features::words_challenge::words_challenge_model::WordsChallengeModel;
 
@@ -32,7 +32,10 @@ pub fn run_tui() -> Result<()> {
 fn handle_event(app_model: &AppModel) -> Result<Option<Message>> {
     if let event::Event::Key(key) = event::read()? {
         // Handle any global key events
-        if key.kind == KeyEventKind::Press && key.code == KeyCode::Char('q') {
+        if key.kind == KeyEventKind::Press
+            && key.code == KeyCode::Char('q')
+            && key.modifiers.contains(KeyModifiers::CONTROL)
+        {
             return Ok(Some(Message::AppExit));
         }
 

@@ -17,5 +17,5 @@ pub fn words_challenge_view(challenge: &WordsChallengeModel, frame: &mut Frame) 
         challenge_model: challenge,
     };
 
-    frame.render_widget(challenge_widget, frame.area());
+    frame.render_widget(challenge_widget, horizontal_center[0]);
 }
