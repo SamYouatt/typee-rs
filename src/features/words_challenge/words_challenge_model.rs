@@ -1,7 +1,11 @@
 use std::{collections::HashSet, time::Instant};
+use color_eyre::Result;
 
-use crossterm::event::KeyCode;
+use crossterm::event::{KeyCode, KeyEvent};
 
+use crate::tui::message::Message;
+
+#[derive(Debug)]
 pub struct WordsChallengeModel {
     pub(super) text: String,
     pub(super) text_length: usize,
@@ -34,15 +38,26 @@ impl WordsChallengeModel {
         }
     }
 
-    pub fn handle_input(mut self, keycode: KeyCode) -> Self {
-        if self.start_time.is_none() {
-            self.start_time = Some(Instant::now());
-        }
 
-        match keycode {
+    pub fn handle_event(&self, key_event: KeyEvent) -> Result<Option<Message>> {
+        Ok(Some(Message::ChallengeLetterInput(key_event.code)))
+    }
+
+    pub(super) fn handle_challenge_input(self, keycode: KeyCode) -> Self {
+        let start_time = match self.start_time {
+            Some(_) => self.start_time,
+            None => Some(Instant::now()),
+        };
+
+        let new_self = match keycode {
             KeyCode::Char(char) => self.handle_character(char),
             KeyCode::Backspace => self.handle_backspace(),
             _ => self,
+        };
+
+        Self {
+            start_time,
+            ..new_self
         }
     }
 
@@ -213,56 +228,56 @@ mod tests {
     #[test]
     fn correct_character_advances_challenge() {
         let model = model_with_text("test");
-        let result = model.handle_input(KeyCode::Char('t'));
+        let result = model.handle_challenge_input(KeyCode::Char('t'));
         assert_eq!(result.current_pos, 1);
     }
 
     #[test]
     fn incorrect_character_advances_challenge() {
         let model = model_with_text("test");
-        let result = model.handle_input(KeyCode::Char('x'));
+        let result = model.handle_challenge_input(KeyCode::Char('x'));
         assert_eq!(result.current_pos, 1);
     }
 
     #[test]
     fn correct_space_advances_challenge() {
         let model = model_with_text_and_pos("space test", 5);
-        let result = model.handle_input(KeyCode::Char(' '));
+        let result = model.handle_challenge_input(KeyCode::Char(' '));
         assert_eq!(result.current_pos, 6);
     }
 
     #[test]
     fn incorrect_slace_advances_challenge() {
         let model = model_with_text_and_pos("space test", 2);
-        let result = model.handle_input(KeyCode::Char(' '));
+        let result = model.handle_challenge_input(KeyCode::Char(' '));
         assert_eq!(result.current_pos, 3);
     }
 
     #[test]
     fn backspace_at_start_does_nothing() {
         let model = model_with_text("test");
-        let result = model.handle_input(KeyCode::Backspace);
+        let result = model.handle_challenge_input(KeyCode::Backspace);
         assert_eq!(result.current_pos, 0);
     }
 
     #[test]
     fn backspace_moves_backwards() {
         let model = model_with_text_and_pos("test", 2);
-        let result = model.handle_input(KeyCode::Backspace);
+        let result = model.handle_challenge_input(KeyCode::Backspace);
         assert_eq!(result.current_pos, 1);
     }
 
     #[test]
     fn correct_final_character_finished_challenge() {
         let model = model_with_text_and_pos("test", 3);
-        let result = model.handle_input(KeyCode::Char('t'));
+        let result = model.handle_challenge_input(KeyCode::Char('t'));
         assert_eq!(result.finished, true);
     }
 
     #[test]
     fn incorrect_final_character_does_not_finish_challenge() {
         let model = model_with_text_and_pos("test", 3);
-        let result = model.handle_input(KeyCode::Char('x'));
+        let result = model.handle_challenge_input(KeyCode::Char('x'));
         assert_eq!(result.current_pos, 4);
         assert_eq!(result.finished, false);
     }
@@ -271,9 +286,9 @@ mod tests {
     fn further_incorrect_characters_are_not_registered() {
         let model = model_with_text_and_pos("test", 3);
         let result = model
-            .handle_input(KeyCode::Char('x'))
-            .handle_input(KeyCode::Char('x'))
-            .handle_input(KeyCode::Char('x'));
+            .handle_challenge_input(KeyCode::Char('x'))
+            .handle_challenge_input(KeyCode::Char('x'))
+            .handle_challenge_input(KeyCode::Char('x'));
 
         assert_eq!(result.current_pos, 4);
         assert_eq!(result.finished, false);
@@ -283,8 +298,8 @@ mod tests {
     fn space_after_incorrect_final_character_finishes_challenge() {
         let model = model_with_text_and_pos("test", 3);
         let result = model
-            .handle_input(KeyCode::Char('x'))
-            .handle_input(KeyCode::Char(' '));
+            .handle_challenge_input(KeyCode::Char('x'))
+            .handle_challenge_input(KeyCode::Char(' '));
 
         assert_eq!(result.current_pos, 4);
         assert_eq!(result.finished, true);
@@ -293,7 +308,7 @@ mod tests {
     #[test]
     fn space_as_final_incorrect_letter_does_not_finished_challenge() {
         let model = model_with_text_and_pos("test", 3);
-        let result = model.handle_input(KeyCode::Char(' '));
+        let result = model.handle_challenge_input(KeyCode::Char(' '));
 
         assert_eq!(result.current_pos, 4);
         assert_eq!(result.finished, false);
@@ -304,18 +319,18 @@ mod tests {
     fn further_characters_after_finished_panics() {
         let model = model_with_text("ab");
         let _ = model
-            .handle_input(KeyCode::Char('a'))
-            .handle_input(KeyCode::Char('b'))
-            .handle_input(KeyCode::Char('c'));
+            .handle_challenge_input(KeyCode::Char('a'))
+            .handle_challenge_input(KeyCode::Char('b'))
+            .handle_challenge_input(KeyCode::Char('c'));
     }
 
     #[test]
     fn backspace_with_incorrect_final_character_moves_backwards() {
         let model = model_with_text_and_pos("test", 3);
-        let result = model.handle_input(KeyCode::Char('x'));
+        let result = model.handle_challenge_input(KeyCode::Char('x'));
         assert_eq!(result.current_pos, 4);
 
-        let result = result.handle_input(KeyCode::Backspace);
+        let result = result.handle_challenge_input(KeyCode::Backspace);
         assert_eq!(result.current_pos, 3);
     }
 
@@ -324,9 +339,9 @@ mod tests {
         let model = model_with_text("dog");
 
         let result = model
-            .handle_input(KeyCode::Char('d'))
-            .handle_input(KeyCode::Char('o'))
-            .handle_input(KeyCode::Char('g'));
+            .handle_challenge_input(KeyCode::Char('d'))
+            .handle_challenge_input(KeyCode::Char('o'))
+            .handle_challenge_input(KeyCode::Char('g'));
 
         assert_eq!(result.accuracy_percent(), 100.0);
     }
@@ -336,11 +351,11 @@ mod tests {
         let model = model_with_text("dog");
 
         let result = model
-            .handle_input(KeyCode::Char('d'))
-            .handle_input(KeyCode::Char('o'))
-            .handle_input(KeyCode::Backspace)
-            .handle_input(KeyCode::Char('o'))
-            .handle_input(KeyCode::Char('g'));
+            .handle_challenge_input(KeyCode::Char('d'))
+            .handle_challenge_input(KeyCode::Char('o'))
+            .handle_challenge_input(KeyCode::Backspace)
+            .handle_challenge_input(KeyCode::Char('o'))
+            .handle_challenge_input(KeyCode::Char('g'));
 
         assert_eq!(result.accuracy_percent(), 100.0);
     }
@@ -350,10 +365,10 @@ mod tests {
         let model = model_with_text("dog");
 
         let result = model
-            .handle_input(KeyCode::Char('c'))
-            .handle_input(KeyCode::Char('a'))
-            .handle_input(KeyCode::Char('t'))
-            .handle_input(KeyCode::Char(' '));
+            .handle_challenge_input(KeyCode::Char('c'))
+            .handle_challenge_input(KeyCode::Char('a'))
+            .handle_challenge_input(KeyCode::Char('t'))
+            .handle_challenge_input(KeyCode::Char(' '));
 
         assert_eq!(result.accuracy_percent(), 0.0);
     }
@@ -363,12 +378,12 @@ mod tests {
         let model = model_with_text("an");
 
         let result = model
-            .handle_input(KeyCode::Char('b'))
-            .handle_input(KeyCode::Backspace)
-            .handle_input(KeyCode::Char('a'))
-            .handle_input(KeyCode::Char('x'))
-            .handle_input(KeyCode::Backspace)
-            .handle_input(KeyCode::Char('n'));
+            .handle_challenge_input(KeyCode::Char('b'))
+            .handle_challenge_input(KeyCode::Backspace)
+            .handle_challenge_input(KeyCode::Char('a'))
+            .handle_challenge_input(KeyCode::Char('x'))
+            .handle_challenge_input(KeyCode::Backspace)
+            .handle_challenge_input(KeyCode::Char('n'));
 
         assert_eq!(result.accuracy_percent(), 0.0);
     }
@@ -378,9 +393,9 @@ mod tests {
         let model = model_with_text("dog");
 
         let result = model
-            .handle_input(KeyCode::Char('d'))
-            .handle_input(KeyCode::Char('a'))
-            .handle_input(KeyCode::Char('g'));
+            .handle_challenge_input(KeyCode::Char('d'))
+            .handle_challenge_input(KeyCode::Char('a'))
+            .handle_challenge_input(KeyCode::Char('g'));
 
         assert_eq!(result.accuracy_percent(), 66.7);
     }
@@ -390,7 +405,7 @@ mod tests {
         let model = WordsChallengeModel::generate(3);
         assert_eq!(model.start_time, None);
 
-        let result = model.handle_input(KeyCode::Char('a'));
+        let result = model.handle_challenge_input(KeyCode::Char('a'));
         assert!(result.start_time.is_some());
     }
 
@@ -399,10 +414,10 @@ mod tests {
         let model = model_with_text("an");
         assert_eq!(model.end_time, None);
 
-        let result = model.handle_input(KeyCode::Char('a'));
+        let result = model.handle_challenge_input(KeyCode::Char('a'));
         assert_eq!(result.end_time, None);
 
-        let result = result.handle_input(KeyCode::Char('n'));
+        let result = result.handle_challenge_input(KeyCode::Char('n'));
         assert!(result.start_time.is_some());
     }
 
