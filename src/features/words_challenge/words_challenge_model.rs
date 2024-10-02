@@ -461,4 +461,12 @@ mod tests {
         let result = model.poll_wpm();
         assert_eq!(result.running_wpm[0], 90.0);
     }
+
+    #[test]
+    fn generate_creates_random_tests() {
+        let first_test = WordsChallengeModel::generate(5);
+        let second_test = WordsChallengeModel::generate(5);
+
+        assert_ne!(first_test.text, second_test.text)
+    }
 }
