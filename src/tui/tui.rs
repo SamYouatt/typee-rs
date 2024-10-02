@@ -20,7 +20,7 @@ pub fn run_tui() -> Result<()> {
         let mut current_msg = handle_event(&app_model)?;
 
         while current_msg.is_some() {
-            current_msg = update(&mut app_model, current_msg.unwrap())?;
+            (app_model, current_msg) = update(app_model, current_msg.unwrap())?;
         }
     }
 
@@ -36,10 +36,10 @@ fn handle_event(app_model: &AppModel) -> Result<Option<Message>> {
             return Ok(Some(Message::AppExit));
         }
 
-        match app_model.app_state {
-            AppPage::WordsChallenge(_) => todo!(),
-        }
-    }
+        return match &app_model.app_state {
+            AppPage::WordsChallenge(model) => model.handle_event(key),
+        };
+    };
 
     Ok(None)
 }
