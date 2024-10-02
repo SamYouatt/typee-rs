@@ -11,7 +11,7 @@ pub fn run_tui() -> Result<()> {
     let words_challenge_model = WordsChallengeModel::generate(5);
     let mut app_model = AppModel {
         app_done: false,
-        app_state: AppPage::WordsChallenge(words_challenge_model),
+        app_page: AppPage::WordsChallenge(words_challenge_model),
     };
 
     while !app_model.app_done {
@@ -36,7 +36,7 @@ fn handle_event(app_model: &AppModel) -> Result<Option<Message>> {
             return Ok(Some(Message::AppExit));
         }
 
-        return match &app_model.app_state {
+        return match &app_model.app_page {
             AppPage::WordsChallenge(model) => model.handle_event(key),
         };
     };
