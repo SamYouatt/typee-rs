@@ -1,7 +1,11 @@
 use color_eyre::Result;
 
-use super::{app_model::AppModel, message::Message};
+use crate::features::words_challenge::words_challenge_update::words_challenge_update;
 
-pub fn update(model: &mut AppModel, msg: Message) -> Result<Option<Message>> {
-    todo!()
+use super::{app_model::AppModel, app_page::AppPage, message::Message};
+
+pub fn update(model: AppModel, msg: Message) -> Result<(AppModel, Option<Message>)> {
+    match &model.app_state {
+        AppPage::WordsChallenge(challenge_model) => words_challenge_update(model, msg),
+    }
 }
