@@ -1,5 +1,6 @@
-use std::{collections::HashSet, time::Instant};
 use color_eyre::Result;
+use rand::seq::SliceRandom;
+use std::{collections::HashSet, time::Instant};
 
 use crossterm::event::{KeyCode, KeyEvent};
 
@@ -21,7 +22,18 @@ pub struct WordsChallengeModel {
 
 impl WordsChallengeModel {
     pub fn generate(num_words: usize) -> Self {
-        let text = "bongle ".repeat(num_words);
+        let corpus: Vec<_> =
+            include_str!(concat!(env!("CARGO_MANIFEST_DIR"), "/src/data/corpus.txt"))
+                .lines()
+                .collect();
+
+        let mut rng = rand::thread_rng();
+        let selected_words: Vec<&str> = corpus
+            .choose_multiple(&mut rng, num_words)
+            .cloned()
+            .collect();
+
+        let text = selected_words.join(" ");
         let text_length = text.chars().count();
         let text_word_count = text.split_whitespace().count();
 
@@ -37,7 +49,6 @@ impl WordsChallengeModel {
             running_wpm: Vec::new(),
         }
     }
-
 
     pub fn handle_event(&self, key_event: KeyEvent) -> Result<Option<Message>> {
         Ok(Some(Message::ChallengeLetterInput(key_event.code)))
